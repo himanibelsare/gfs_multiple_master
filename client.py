@@ -15,13 +15,21 @@ def create_file(stub):
     else:
         print(response.message)
 
+def delete_file(stub):
+    file_name = input("Enter file name: ")
+    response = stub.delete_file(gfs_pb2.String(string=file_name))
+    if response.code:
+        print("File deleted.")
+    else:
+        print(response.message)
+
 
 def run(server):
     channel = grpc.insecure_channel(server)
     print("Running on server", server, sep=" ")
     stub = gfs_pb2_grpc.MasterToClientStub(channel)
     while True:
-        action = input("Enter 1 to create file, q to quit: ")
+        action = input("Enter 1 to create file, 2 to delete file, q to quit: ")
         if action == "1":
             create_file(stub)
         elif action == "q":

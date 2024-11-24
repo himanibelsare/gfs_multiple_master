@@ -10,35 +10,75 @@ import json
 
 data_lock = threading.Lock()
 
+# add to json/modify existing values
 def update_json(data_update, file_path):
+    flag = 1
     with data_lock:
         try:
-            # Read the existing data
             with open(file_path, 'r') as file:
                 data = json.load(file)
 
-            # Update the data
+            keys = list(data_update.keys())
+            if keys[0] in data:
+                flag = 2
+
             data.update(data_update)
 
-            # Write back the updated data
             with open(file_path, 'w') as file:
                 json.dump(data, file, indent=4)
         except FileNotFoundError:
-            # Handle the case where the file doesn't exist
             with open(file_path, 'w') as file:
                 json.dump(data_update, file, indent=4)
+    return flag
+
+# delete from json and return popped value
+def remove_from_json(key, file_path):
+    flag = 1
+    value = None
+    with data_lock:
+        try:
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+
+            if key not in data:
+                flag = 2
+            else:
+                value = data.pop(key)
+        except FileNotFoundError:
+            flag = 0
+    return [flag, value]
 
 class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
     def __init__(self) -> None:
         self.clientIDs = 0
-        self.file_data_path = "files.json"  #file to store mapping for chunks in each file
+        self.file_chunks_path = "master_data/file_chunks.json"  #file to store mapping for chunks in each file
+        self.chunk_locations_path = "master_data/chunk_locations.json"
 
     def get_id(self, request, context):
         self.clientIDs += 1
         return gfs_pb2.IDResponse(client_id = self.clientIDs)
     
-    # def create_file(self, request, context):
-        
+    def create_file(self, request, context):
+        new_file = {request.string : []}
+        flag = update_json(new_file, self.file_chunks_path)
+        if flag == 1:
+            return gfs_pb2.Status(code = 1)
+        elif flag == 2:
+            return gfs_pb2.Status(code = 0, message = "File already exists.")
+
+    def delete_file(self, request, context):
+        popped = remove_from_json(request.string, self.file_chunks_path)
+        if popped[0] == 1:
+            chunks = popped[1]
+            for chunk in chunks:
+                servers = remove_from_json(chunk, self.chunk_locations_path)
+                # TODO: handle deleting all chunks from chunkservers
+            return gfs_pb2.Status(code = 1)
+        elif popped[0] == 2:
+            return gfs_pb2.Status(code = 0, message = "File does not exist.")
+        elif popped[0] == 0:
+            return gfs_pb2.Status(code = 0, message = "No files have been created yet.")
+
 
 def serve(port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
