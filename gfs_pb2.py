@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tgfs.proto\x12\x03GFS\"\x0e\n\x0c\x45mptyRequest\"\x1f\n\nIDResponse\x12\x11\n\tclient_id\x18\x01 \x01(\x05\"\x18\n\x06String\x12\x0e\n\x06string\x18\x01 \x01(\t\"\'\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t2\xff\x02\n\x0eMasterToClient\x12.\n\x06get_id\x12\x11.GFS.EmptyRequest\x1a\x0f.GFS.IDResponse\"\x00\x12)\n\x0b\x63reate_file\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12)\n\x0b\x64\x65lete_file\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12*\n\nlist_files\x12\x0b.GFS.String\x1a\x0b.GFS.String\"\x00\x30\x01\x12,\n\x0eget_chunk_locs\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12*\n\x0c\x63ommit_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12\x30\n\x12\x66ile_create_status\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12/\n\x11get_chunk_details\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x32i\n\rChunkToClient\x12,\n\x0c\x63reate_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00(\x01\x12*\n\nread_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.String\"\x00\x30\x01\x32o\n\x0c\x43hunkToChunk\x12,\n\x0c\x63reate_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00(\x01\x12\x31\n\x11read_entire_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.String\"\x00\x30\x01\x32\xc2\x01\n\rChunkToMaster\x12*\n\x0c\x63ommit_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12-\n\rdelete_chunks\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00(\x01\x12-\n\x0freplicate_chunk\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x12\'\n\theartbeat\x12\x0b.GFS.String\x1a\x0b.GFS.Status\"\x00\x32?\n\rMasterToChunk\x12.\n\x0cquery_chunks\x12\x0b.GFS.String\x1a\x0b.GFS.String\"\x00(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tgfs.proto\x12\x03gfs\"\x0e\n\x0c\x45mptyRequest\"\x1f\n\nIDResponse\x12\x11\n\tclient_id\x18\x01 \x01(\x05\"\x1f\n\x0b\x46ileRequest\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\"B\n\x0c\x46ileResponse\x12\x10\n\x08\x66ilename\x18\x01 \x01(\t\x12\x0c\n\x04size\x18\x02 \x01(\x03\x12\x12\n\ncreated_at\x18\x03 \x01(\t\"2\n\x0c\x43hunkRequest\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\t\x12\x10\n\x08\x66ilename\x18\x02 \x01(\t\";\n\tChunkData\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x12\x0e\n\x06offset\x18\x03 \x01(\x05\"\x1a\n\x08\x46ileName\x12\x0e\n\x06string\x18\x01 \x01(\t\"<\n\x16\x43hunkLocationsResponse\x12\"\n\x06\x63hunks\x18\x01 \x03(\x0b\x32\x12.gfs.ChunkLocation\"8\n\rChunkLocation\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\t\x12\x15\n\rchunk_servers\x18\x02 \x03(\t\"Z\n\x14\x43hunkDetailsResponse\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\t\x12\x0c\n\x04size\x18\x02 \x01(\x03\x12\x11\n\tlocations\x18\x03 \x03(\t\x12\x0f\n\x07version\x18\x04 \x01(\x05\"U\n\x10HeartbeatRequest\x12\x11\n\tserver_id\x18\x01 \x01(\t\x12\x15\n\rstored_chunks\x18\x02 \x03(\t\x12\x17\n\x0f\x61vailable_space\x18\x03 \x01(\x03\"B\n\rChunkResponse\x12\x10\n\x08\x63hunk_id\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07version\x18\x03 \x01(\x05\"\x18\n\x06String\x12\x0e\n\x06string\x18\x01 \x01(\t\"\'\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t2\xc8\x03\n\x0eMasterToClient\x12\x33\n\x0bGetClientID\x12\x11.gfs.EmptyRequest\x1a\x0f.gfs.IDResponse\"\x00\x12+\n\x0b\x63reate_file\x12\r.gfs.FileName\x1a\x0b.gfs.Status\"\x00\x12+\n\x0b\x64\x65lete_file\x12\r.gfs.FileName\x1a\x0b.gfs.Status\"\x00\x12\x35\n\tListFiles\x12\x11.gfs.EmptyRequest\x1a\x11.gfs.FileResponse\"\x00\x30\x01\x12\x44\n\x11GetChunkLocations\x12\x10.gfs.FileRequest\x1a\x1b.gfs.ChunkLocationsResponse\"\x00\x12/\n\x0b\x43ommitChunk\x12\x11.gfs.ChunkRequest\x1a\x0b.gfs.Status\"\x00\x12\x36\n\x13GetFileCreateStatus\x12\x10.gfs.FileRequest\x1a\x0b.gfs.Status\"\x00\x12\x41\n\x0fGetChunkDetails\x12\x11.gfs.ChunkRequest\x1a\x19.gfs.ChunkDetailsResponse\"\x00\x32s\n\rChunkToClient\x12.\n\x0b\x43reateChunk\x12\x0e.gfs.ChunkData\x1a\x0b.gfs.Status\"\x00(\x01\x12\x32\n\tReadChunk\x12\x11.gfs.ChunkRequest\x1a\x0e.gfs.ChunkData\"\x00\x30\x01\x32x\n\x0c\x43hunkToChunk\x12.\n\x0b\x43reateChunk\x12\x0e.gfs.ChunkData\x1a\x0b.gfs.Status\"\x00(\x01\x12\x38\n\x0fReadEntireChunk\x12\x11.gfs.ChunkRequest\x1a\x0e.gfs.ChunkData\"\x00\x30\x01\x32\xdb\x01\n\rChunkToMaster\x12/\n\x0b\x43ommitChunk\x12\x11.gfs.ChunkRequest\x1a\x0b.gfs.Status\"\x00\x12\x32\n\x0c\x44\x65leteChunks\x12\x11.gfs.ChunkRequest\x1a\x0b.gfs.Status\"\x00(\x01\x12\x32\n\x0eReplicateChunk\x12\x11.gfs.ChunkRequest\x1a\x0b.gfs.Status\"\x00\x12\x31\n\tHeartbeat\x12\x15.gfs.HeartbeatRequest\x1a\x0b.gfs.Status\"\x00\x32K\n\rMasterToChunk\x12:\n\x0bQueryChunks\x12\x11.gfs.ChunkRequest\x1a\x12.gfs.ChunkResponse\"\x00(\x01\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,18 +35,38 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_EMPTYREQUEST']._serialized_end=32
   _globals['_IDRESPONSE']._serialized_start=34
   _globals['_IDRESPONSE']._serialized_end=65
-  _globals['_STRING']._serialized_start=67
-  _globals['_STRING']._serialized_end=91
-  _globals['_STATUS']._serialized_start=93
-  _globals['_STATUS']._serialized_end=132
-  _globals['_MASTERTOCLIENT']._serialized_start=135
-  _globals['_MASTERTOCLIENT']._serialized_end=518
-  _globals['_CHUNKTOCLIENT']._serialized_start=520
-  _globals['_CHUNKTOCLIENT']._serialized_end=625
-  _globals['_CHUNKTOCHUNK']._serialized_start=627
-  _globals['_CHUNKTOCHUNK']._serialized_end=738
-  _globals['_CHUNKTOMASTER']._serialized_start=741
-  _globals['_CHUNKTOMASTER']._serialized_end=935
-  _globals['_MASTERTOCHUNK']._serialized_start=937
-  _globals['_MASTERTOCHUNK']._serialized_end=1000
+  _globals['_FILEREQUEST']._serialized_start=67
+  _globals['_FILEREQUEST']._serialized_end=98
+  _globals['_FILERESPONSE']._serialized_start=100
+  _globals['_FILERESPONSE']._serialized_end=166
+  _globals['_CHUNKREQUEST']._serialized_start=168
+  _globals['_CHUNKREQUEST']._serialized_end=218
+  _globals['_CHUNKDATA']._serialized_start=220
+  _globals['_CHUNKDATA']._serialized_end=279
+  _globals['_FILENAME']._serialized_start=281
+  _globals['_FILENAME']._serialized_end=307
+  _globals['_CHUNKLOCATIONSRESPONSE']._serialized_start=309
+  _globals['_CHUNKLOCATIONSRESPONSE']._serialized_end=369
+  _globals['_CHUNKLOCATION']._serialized_start=371
+  _globals['_CHUNKLOCATION']._serialized_end=427
+  _globals['_CHUNKDETAILSRESPONSE']._serialized_start=429
+  _globals['_CHUNKDETAILSRESPONSE']._serialized_end=519
+  _globals['_HEARTBEATREQUEST']._serialized_start=521
+  _globals['_HEARTBEATREQUEST']._serialized_end=606
+  _globals['_CHUNKRESPONSE']._serialized_start=608
+  _globals['_CHUNKRESPONSE']._serialized_end=674
+  _globals['_STRING']._serialized_start=676
+  _globals['_STRING']._serialized_end=700
+  _globals['_STATUS']._serialized_start=702
+  _globals['_STATUS']._serialized_end=741
+  _globals['_MASTERTOCLIENT']._serialized_start=744
+  _globals['_MASTERTOCLIENT']._serialized_end=1200
+  _globals['_CHUNKTOCLIENT']._serialized_start=1202
+  _globals['_CHUNKTOCLIENT']._serialized_end=1317
+  _globals['_CHUNKTOCHUNK']._serialized_start=1319
+  _globals['_CHUNKTOCHUNK']._serialized_end=1439
+  _globals['_CHUNKTOMASTER']._serialized_start=1442
+  _globals['_CHUNKTOMASTER']._serialized_end=1661
+  _globals['_MASTERTOCHUNK']._serialized_start=1663
+  _globals['_MASTERTOCHUNK']._serialized_end=1738
 # @@protoc_insertion_point(module_scope)

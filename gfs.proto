@@ -1,51 +1,101 @@
 syntax = "proto3";
 
-package GFS;
+package gfs;  // typically lowercase is used for package names
 
 // Interface exported by the master server
 service MasterToClient {
-  rpc get_id (EmptyRequest) returns (IDResponse) {}
-  rpc create_file (String) returns (Status) {}
-  rpc delete_file (String) returns (Status) {}
-  rpc list_files (String) returns (stream String) {}
-  rpc get_chunk_locs (String) returns (Status) {}
-  rpc commit_chunk (String) returns (Status) {}
-  rpc file_create_status (String) returns (Status) {}
-  rpc get_chunk_details (String) returns (Status) {}
+  rpc GetClientID (EmptyRequest) returns (IDResponse) {}
+  rpc create_file (FileName) returns (Status) {}
+  rpc delete_file (FileName) returns (Status) {}
+  rpc ListFiles (EmptyRequest) returns (stream FileResponse) {}  // better return type
+  rpc GetChunkLocations (FileRequest) returns (ChunkLocationsResponse) {}  // specific response
+  rpc CommitChunk (ChunkRequest) returns (Status) {}
+  rpc GetFileCreateStatus (FileRequest) returns (Status) {}
+  rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
 }
 
-// Interface exported by the chunk server
 service ChunkToClient {
-  rpc create_chunk (stream String) returns (Status) {}
-  rpc read_chunk (String) returns (stream String) {}
+  rpc CreateChunk (stream ChunkData) returns (Status) {}
+  rpc ReadChunk (ChunkRequest) returns (stream ChunkData) {}
 }
 
 service ChunkToChunk {
-  rpc create_chunk (stream String) returns (Status) {}
-  rpc read_entire_chunk (String) returns (stream String) {}
+  rpc CreateChunk (stream ChunkData) returns (Status) {}
+  rpc ReadEntireChunk (ChunkRequest) returns (stream ChunkData) {}
 }
 
 service ChunkToMaster {
-  rpc commit_chunk (String) returns (Status) {}
-  rpc delete_chunks (stream String) returns (Status) {}
-  rpc replicate_chunk (String) returns (Status) {}
-  rpc heartbeat (String) returns (Status) {}
+  rpc CommitChunk (ChunkRequest) returns (Status) {}
+  rpc DeleteChunks (stream ChunkRequest) returns (Status) {}
+  rpc ReplicateChunk (ChunkRequest) returns (Status) {}
+  rpc Heartbeat (HeartbeatRequest) returns (Status) {}
 }
 
 service MasterToChunk {
-  rpc query_chunks (stream String) returns (stream String) {}
+  rpc QueryChunks (stream ChunkRequest) returns (stream ChunkResponse) {}
 }
 
-message EmptyRequest {
-
-}
+// Message definitions
+message EmptyRequest {}
 
 message IDResponse {
   int32 client_id = 1;
 }
 
-message String {
-  string string = 1;
+message FileRequest {
+  string filename = 1;
+}
+
+message FileResponse {
+  string filename = 1;
+  int64 size = 2;
+  string created_at = 3;
+}
+
+message ChunkRequest {
+  string chunk_id = 1;
+  string filename = 2;  // optional, for context
+}
+
+message ChunkData {
+  string chunk_id = 1;
+  bytes data = 2;
+  int32 offset = 3;
+}
+
+message FileName{
+    string string = 1;
+}
+
+message ChunkLocationsResponse {
+  repeated ChunkLocation chunks = 1;
+}
+
+message ChunkLocation {
+  string chunk_id = 1;
+  repeated string chunk_servers = 2;  // server addresses
+}
+
+message ChunkDetailsResponse {
+  string chunk_id = 1;
+  int64 size = 2;
+  repeated string locations = 3;
+  int32 version = 4;
+}
+
+message HeartbeatRequest {
+  string server_id = 1;
+  repeated string stored_chunks = 2;
+  int64 available_space = 3;
+}
+
+message ChunkResponse {
+  string chunk_id = 1;
+  string status = 2;
+  int32 version = 3;
+}
+message String{
+    string string = 1;
 }
 
 message Status {

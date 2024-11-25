@@ -54,7 +54,7 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         self.file_chunks_path = "master_data/file_chunks.json"  #file to store mapping for chunks in each file
         self.chunk_locations_path = "master_data/chunk_locations.json"
 
-    def get_id(self, request, context):
+    def GetClientID(self, request, context):
         self.clientIDs += 1
         return gfs_pb2.IDResponse(client_id = self.clientIDs)
     
@@ -81,7 +81,7 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
 
 
 def serve(port):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
     gfs_pb2_grpc.add_MasterToClientServicer_to_server(MasterToClient(), server)
     server.add_insecure_port(f'[::]:{port}')
     server.start()
