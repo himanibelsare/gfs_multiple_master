@@ -30,11 +30,18 @@ class Client:
 
     def delete_file(self, stub):
         file_name = input("Enter file name: ")
-        response = stub.DeleteFile(gfs_pb2.FileRequest(name=file_name))
-        if response.code == 1:
-            print("File deleted.")
-        else:
-            print(response.message)
+        responses = stub.DeleteFile(gfs_pb2.FileRequest(name=file_name))
+        for response in responses:
+            if response.status == 0:
+                print(response.message)
+                return
+            chunk_id = response.chunk_id
+            servers = response.server
+            for server in servers:
+                status = self.chunk_stubs[server].DeleteChunk(gfs_pb2.ChunkRequest(chunk_id=chunk_id))
+                break # TODO: Remove after replication is complete
+        print("Deleted.")
+
 
     def take_snapshot(self, stub):
         print("Taking snapshot")
@@ -42,17 +49,7 @@ class Client:
         print(response.message)
 
 
-    
-    # def write(self, stub):
-    #     file_name = input("Enter name of file to write to: ")
-    #     offset = input("Enter offset from where to start writing: ")
-    #     content = input("Enter content to be written: ")
-    #     chunk_start_idx = offset/CHUNK_SIZE
-    #     num_chunks_needed = len(content)/CHUNK_SIZE
-    #     locations = stub.LocateChunk(gfs_pb2.WriteChunkRequest(length=len(content), idx=chunk_start_idx, name=file_name))
-
-
-    def append(self, stub):
+    def append_file(self, stub):
         file_name = input("Enter file name: ")
         content = input("Enter content: ")
         print(len(content))
@@ -62,6 +59,9 @@ class Client:
         content_covered = 0  # Track how much content has been processed
 
         for server in servers:
+            if server.status == 0:
+                print("File not found.")
+                return
             if content_covered >= len(content):
                 break  # Exit if all content has been covered
             
@@ -106,20 +106,47 @@ class Client:
                             )
                         )
         return
+    
+
+    def read_file(self, stub):
+        file_name = input("Enter file name: ")
+        chunks = stub.GetChunkLocations(gfs_pb2.FileRequest(name=file_name))
+        data = ''
+        for chunk in chunks:
+            if chunk.status == 0:
+                print("File not found.")
+                return
+            server = chunk.server[0]
+            chunk_id = chunk.chunk_id
+            response = self.chunk_stubs[server].ReadChunk(gfs_pb2.ChunkRequest(chunk_id=chunk_id))
+            if response.data != None:
+                data += response.data
+        print_all = input("Do you want to print the whole file? (Enter y for yes)")
+        if print_all.upper() == "Y":
+            print(data)
+            return
+        offset = int(input("Enter start offset: "))
+        size = int(input("Enter how many charachters: "))
+        end = offset+size
+        if end>len(data):
+            end=len(data)
+        print(data[offset:end])
 
 
     def run(self, server):
         print("Running on server", server, sep=" ")
         while True:
-            action = input("Enter 1 to create file, 2 to delete file, 3 to append to file, 4 to take a snapshot, q to quit: ")
+            action = input("Enter 1 to create file, 2 to delete file, 3 to append to file, 4 to take a snapshot, 5 to read a file, q to quit: ")
             if action == "1":
                 self.create_file(self.master_stub)
             elif action == "2":
                 self.delete_file(self.master_stub)
             elif action == "3":
-                self.append(self.master_stub)
+                self.append_file(self.master_stub)
             elif action == "4":
                 self.take_snapshot(self.master_stub)
+            elif action == "5":
+                self.read_file(self.master_stub)
             elif action == "q":
                 break
 

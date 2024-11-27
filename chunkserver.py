@@ -66,47 +66,13 @@ class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer,
 
     def ReadChunk(self, request, context):
         chunk_id = request.chunk_id
-        chunk_path = os.path.join(self.chunk_dir, chunk_id)
-        
-        try:
-            with open(chunk_path, 'rb') as f:
-                while True:
-                    data = f.read(4096)  # Read in 4KB chunks
-                    if not data:
-                        break
-                    yield gfs_pb2.ChunkData(
-                        chunk_id=chunk_id,
-                        data=data
-                    )
-        except Exception as e:
-            context.abort(grpc.StatusCode.NOT_FOUND, str(e))
+        flag, curr_data = read_from_json(chunk_id, self.chunk_file)
+        return gfs_pb2.ChunkData(data=curr_data)
 
-    # ChunkToChunk Service methods
-    def CreateChunk(self, request_iterator, context):
-        # Similar to client's CreateChunk but for replication
-        pass
-
-    def ReadEntireChunk(self, request, context):
-        # Similar to client's ReadChunk but for replication
-        pass
-
-    # ChunkToMaster Service methods
-    def CommitChunk(self, request, context):
+    def DeleteChunk(self, request, context):
         chunk_id = request.chunk_id
-        if chunk_id in self.chunks:
-            return gfs_pb2.Status(code=0, message="Chunk committed")
-        return gfs_pb2.Status(code=1, message="Chunk not found")
-
-    def DeleteChunks(self, request_iterator, context):
-        for request in request_iterator:
-            chunk_id = request.chunk_id
-            chunk_path = os.path.join(self.chunk_dir, chunk_id)
-            try:
-                os.remove(chunk_path)
-                del self.chunks[chunk_id]
-            except Exception as e:
-                print(f"Error deleting chunk {chunk_id}: {e}")
-        return gfs_pb2.Status(code=0, message="Chunks deleted")
+        remove_from_json(chunk_id, self.chunk_file)
+        return gfs_pb2.Status()
 
     def ReplicateChunk(self, request, context):
         # Handle chunk replication

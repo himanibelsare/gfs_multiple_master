@@ -5,7 +5,7 @@ import warnings
 
 import gfs_pb2 as gfs__pb2
 
-GRPC_GENERATED_VERSION = '1.67.0'
+GRPC_GENERATED_VERSION = '1.66.2'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -45,24 +45,24 @@ class MasterToClientStub(object):
                 request_serializer=gfs__pb2.FileRequest.SerializeToString,
                 response_deserializer=gfs__pb2.Status.FromString,
                 _registered_method=True)
-        self.DeleteFile = channel.unary_unary(
+        self.DeleteFile = channel.unary_stream(
                 '/gfs.MasterToClient/DeleteFile',
                 request_serializer=gfs__pb2.FileRequest.SerializeToString,
-                response_deserializer=gfs__pb2.Status.FromString,
+                response_deserializer=gfs__pb2.ChunkLocationsResponse.FromString,
                 _registered_method=True)
         self.ListFiles = channel.unary_stream(
                 '/gfs.MasterToClient/ListFiles',
                 request_serializer=gfs__pb2.EmptyRequest.SerializeToString,
                 response_deserializer=gfs__pb2.FileResponse.FromString,
                 _registered_method=True)
-        self.GetChunkLocations = channel.unary_unary(
+        self.GetChunkLocations = channel.unary_stream(
                 '/gfs.MasterToClient/GetChunkLocations',
                 request_serializer=gfs__pb2.FileRequest.SerializeToString,
                 response_deserializer=gfs__pb2.ChunkLocationsResponse.FromString,
                 _registered_method=True)
         self.CommitChunk = channel.unary_unary(
                 '/gfs.MasterToClient/CommitChunk',
-                request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
+                request_serializer=gfs__pb2.AppendRequest.SerializeToString,
                 response_deserializer=gfs__pb2.ChunkLocationsResponse.FromString,
                 _registered_method=True)
         self.GetFileCreateStatus = channel.unary_unary(
@@ -186,24 +186,24 @@ def add_MasterToClientServicer_to_server(servicer, server):
                     request_deserializer=gfs__pb2.FileRequest.FromString,
                     response_serializer=gfs__pb2.Status.SerializeToString,
             ),
-            'DeleteFile': grpc.unary_unary_rpc_method_handler(
+            'DeleteFile': grpc.unary_stream_rpc_method_handler(
                     servicer.DeleteFile,
                     request_deserializer=gfs__pb2.FileRequest.FromString,
-                    response_serializer=gfs__pb2.Status.SerializeToString,
+                    response_serializer=gfs__pb2.ChunkLocationsResponse.SerializeToString,
             ),
             'ListFiles': grpc.unary_stream_rpc_method_handler(
                     servicer.ListFiles,
                     request_deserializer=gfs__pb2.EmptyRequest.FromString,
                     response_serializer=gfs__pb2.FileResponse.SerializeToString,
             ),
-            'GetChunkLocations': grpc.unary_unary_rpc_method_handler(
+            'GetChunkLocations': grpc.unary_stream_rpc_method_handler(
                     servicer.GetChunkLocations,
                     request_deserializer=gfs__pb2.FileRequest.FromString,
                     response_serializer=gfs__pb2.ChunkLocationsResponse.SerializeToString,
             ),
             'CommitChunk': grpc.unary_unary_rpc_method_handler(
                     servicer.CommitChunk,
-                    request_deserializer=gfs__pb2.ChunkRequest.FromString,
+                    request_deserializer=gfs__pb2.AppendRequest.FromString,
                     response_serializer=gfs__pb2.ChunkLocationsResponse.SerializeToString,
             ),
             'GetFileCreateStatus': grpc.unary_unary_rpc_method_handler(
@@ -313,12 +313,12 @@ class MasterToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
             '/gfs.MasterToClient/DeleteFile',
             gfs__pb2.FileRequest.SerializeToString,
-            gfs__pb2.Status.FromString,
+            gfs__pb2.ChunkLocationsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -367,7 +367,7 @@ class MasterToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
             '/gfs.MasterToClient/GetChunkLocations',
@@ -398,7 +398,7 @@ class MasterToClient(object):
             request,
             target,
             '/gfs.MasterToClient/CommitChunk',
-            gfs__pb2.ChunkRequest.SerializeToString,
+            gfs__pb2.AppendRequest.SerializeToString,
             gfs__pb2.ChunkLocationsResponse.FromString,
             options,
             channel_credentials,
@@ -592,10 +592,15 @@ class ChunkToClientStub(object):
                 request_serializer=gfs__pb2.ChunkData.SerializeToString,
                 response_deserializer=gfs__pb2.Status.FromString,
                 _registered_method=True)
-        self.ReadChunk = channel.unary_stream(
+        self.ReadChunk = channel.unary_unary(
                 '/gfs.ChunkToClient/ReadChunk',
                 request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
                 response_deserializer=gfs__pb2.ChunkData.FromString,
+                _registered_method=True)
+        self.DeleteChunk = channel.unary_unary(
+                '/gfs.ChunkToClient/DeleteChunk',
+                request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
+                response_deserializer=gfs__pb2.Status.FromString,
                 _registered_method=True)
 
 
@@ -620,6 +625,12 @@ class ChunkToClientServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DeleteChunk(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChunkToClientServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -633,10 +644,15 @@ def add_ChunkToClientServicer_to_server(servicer, server):
                     request_deserializer=gfs__pb2.ChunkData.FromString,
                     response_serializer=gfs__pb2.Status.SerializeToString,
             ),
-            'ReadChunk': grpc.unary_stream_rpc_method_handler(
+            'ReadChunk': grpc.unary_unary_rpc_method_handler(
                     servicer.ReadChunk,
                     request_deserializer=gfs__pb2.ChunkRequest.FromString,
                     response_serializer=gfs__pb2.ChunkData.SerializeToString,
+            ),
+            'DeleteChunk': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteChunk,
+                    request_deserializer=gfs__pb2.ChunkRequest.FromString,
+                    response_serializer=gfs__pb2.Status.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -714,12 +730,39 @@ class ChunkToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(
+        return grpc.experimental.unary_unary(
             request,
             target,
             '/gfs.ChunkToClient/ReadChunk',
             gfs__pb2.ChunkRequest.SerializeToString,
             gfs__pb2.ChunkData.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteChunk(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gfs.ChunkToClient/DeleteChunk',
+            gfs__pb2.ChunkRequest.SerializeToString,
+            gfs__pb2.Status.FromString,
             options,
             channel_credentials,
             insecure,

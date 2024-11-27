@@ -45,15 +45,19 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         popped = remove_from_json(request.name, self.file_chunks_path)
         if popped[0] == 1:
             chunks = popped[1]
-            for chunk in chunks:
-                servers = remove_from_json(chunk, self.chunk_locations_path)
-                # TODO: handle deleting all chunks from chunkservers
-            return gfs_pb2.Status(code = 1)
+            if len(chunks) == 0:
+                yield gfs_pb2.ChunkLocationsResponse(status=2)
+            else:
+                for chunk in chunks:
+                    servers = remove_from_json(chunk, self.chunk_locations_path)
+                    response = gfs_pb2.ChunkLocationsResponse(chunk_id=chunk, status=1)
+                    response.server.extend(servers[1])
+                    yield response
         elif popped[0] == 2:
-            return gfs_pb2.Status(code = 0, message = "File does not exist.")
+            yield gfs_pb2.ChunkLocationsResponse(status=0, message = "File does not exist.")
         elif popped[0] == 0:
-            return gfs_pb2.Status(code = 0, message = "No files have been created yet.")
-        
+            yield gfs_pb2.ChunkLocationsResponse(status = 0, message = "No files have been created yet.")
+          
     # def LocateChunks(self, request, context):
     #     file_name = request.name
     #     start_idx = request.idx
@@ -106,14 +110,15 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         return servers
     
     def AppendRecord(self, request, context):
+        # print("here")
         file_name = request.name
         num_chunks = request.new_chunk
         chunks = read_from_json(file_name, self.file_chunks_path)
         if chunks[0] == 0 or chunks[0] == 2:
             yield gfs_pb2.ChunkLocationsResponse(status=0)
         else:
-            if len(chunks[1]) == 0 and num_chunks == 0:
-                num_chunks = 1
+            if len(chunks[1]) == 0:
+                num_chunks += 1
             else:
                 response = gfs_pb2.ChunkLocationsResponse(status=2,chunk_id=chunks[1][-1])
                 servers = read_from_json(chunks[1][-1], self.chunk_locations_path)
@@ -130,6 +135,20 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         servers = self.CreateChunk(file_name)
         response = gfs_pb2.ChunkLocationsResponse(status=1,chunk_id=self.chunk_ID)
         response.server.extend(servers)
+        return response
+    
+
+    def GetChunkLocations(self, request, context):
+        file_name = request.name
+        flag, chunks = read_from_json(file_name, self.file_chunks_path)
+        if flag == 0 or flag == 2:
+            yield gfs_pb2.ChunkLocationsResponse(status=0)
+        else:
+            for chunk in chunks:
+                response = gfs_pb2.ChunkLocationsResponse(chunk_id=chunk, status=1)
+                servers = read_from_json(chunk, self.chunk_locations_path)
+                response.server.extend(servers[1])
+                yield response
 
 
     def CreateSnapshot(self, request, context):
@@ -211,6 +230,7 @@ def serve(port):
     server.wait_for_termination()
 
 if __name__ == "__main__":
+    os.makedirs("metadata", exist_ok=True)
     ports = [50051, 50052, 50053]
     threads = []
     for port in ports:
