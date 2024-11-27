@@ -47,6 +47,31 @@ class Client:
 
 
     def append(self, stub):
+        file_name = input("Enter file name: ")
+        content = input("Enter content: ")
+        content_covered = 0
+        num_chunks = int(len(content)//CHUNK_SIZE)
+        servers = stub.AppendRecord(gfs_pb2.AppendRequest(new_chunk=num_chunks,name=file_name))
+        for server in servers:
+            if server.status == 0:
+                print("File does not exist.")
+                return
+            if server.status == 2:
+                chunk_id = server.chunk_id
+                chunk_locations = server.server
+                till = CHUNK_SIZE/4
+                if len(content) < till:
+                    till = len(content)
+                record = content[:till]
+                
+
+        while content_covered < len(content):
+            if content_covered + CHUNK_SIZE/4 > len(content):
+                record = content[content_covered:]
+            else:
+                record = content[content_covered:content_covered+CHUNK_SIZE/4]
+            content_covered += CHUNK_SIZE/4
+
         return
 
 

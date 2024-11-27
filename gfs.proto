@@ -13,10 +13,11 @@ service MasterToClient {
   rpc GetFileCreateStatus (FileRequest) returns (Status) {}
   rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
   rpc LocateChunks (WriteChunkRequest) returns (stream ChunkLocation) {}
-  rpc AppendRecord (FileRequest) returns (stream ChunkLocationsResponse) {}
+  rpc AppendRecord (AppendRequest) returns (stream ChunkLocationsResponse) {}
 }
 
 service ChunkToClient {
+  rpc AppendToChunk (ChunkData) returns (Status) {}
   rpc CreateChunk (stream ChunkData) returns (Status) {}
   rpc ReadChunk (ChunkRequest) returns (stream ChunkData) {}
 }
@@ -42,6 +43,11 @@ message EmptyRequest {}
 
 message IDResponse {
   int32 client_id = 1;
+}
+
+message AppendRequest {
+  int32 new_chunk = 1;
+  string name = 2;
 }
 
 message WriteChunkRequest {
@@ -72,7 +78,9 @@ message ChunkData {
 }
 
 message ChunkLocationsResponse {
-  int32 server = 1;
+  repeated int32 server = 1;
+  int32 status = 2;
+  string chunk_id = 3;
 }
 
 message ChunkLocation {
