@@ -30,11 +30,17 @@ class Client:
 
     def delete_file(self, stub):
         file_name = input("Enter file name: ")
-        response = stub.DeleteFile(gfs_pb2.FileRequest(name=file_name))
-        if response.code == 1:
-            print("File deleted.")
-        else:
-            print(response.message)
+        responses = stub.DeleteFile(gfs_pb2.FileRequest(name=file_name))
+        for response in responses:
+            if response.status == 0:
+                print(response.message)
+                return
+            chunk_id = response.chunk_id
+            servers = response.server
+            for server in servers:
+                status = self.chunk_stubs[server].DeleteChunk(gfs_pb2.ChunkRequest(chunk_id=chunk_id))
+                break
+        print("Deleted.")
 
     
     # def write(self, stub):
@@ -46,7 +52,7 @@ class Client:
     #     locations = stub.LocateChunk(gfs_pb2.WriteChunkRequest(length=len(content), idx=chunk_start_idx, name=file_name))
 
 
-    def append(self, stub):
+    def append_file(self, stub):
         file_name = input("Enter file name: ")
         content = input("Enter content: ")
         print(len(content))
@@ -56,6 +62,9 @@ class Client:
         content_covered = 0  # Track how much content has been processed
 
         for server in servers:
+            if server.status == 0:
+                print("File not found.")
+                return
             if content_covered >= len(content):
                 break  # Exit if all content has been covered
             
@@ -88,7 +97,7 @@ class Client:
                     break  # Exit loop if all content has been written
 
         if content_covered < len(content):
-            print("here")
+            # print("here")
             server = stub.CommitChunk(gfs_pb2.AppendRequest(new_chunk=1,name=file_name))
             chunk_id = server.chunk_id
             chunk_locations = server.server
@@ -100,18 +109,37 @@ class Client:
                             )
                         )
         return
+    
+
+    def read_file(self, stub):
+        file_name = input("Enter file name: ")
+        chunks = stub.GetChunkLocations(gfs_pb2.FileRequest(name=file_name))
+        data = ''
+        for chunk in chunks:
+            if chunk.status == 0:
+                print("File not found.")
+                return
+            server = chunk.server[0]
+            chunk_id = chunk.chunk_id
+            response = self.chunk_stubs[server].ReadChunk(gfs_pb2.ChunkRequest(chunk_id=chunk_id))
+            if response.data != None:
+                data += response.data
+        print(data)
+
 
 
     def run(self, server):
         print("Running on server", server, sep=" ")
         while True:
-            action = input("Enter 1 to create file, 2 to delete file, 3 to append to file, q to quit: ")
+            action = input("Enter 1 to create file, 2 to delete file, 3 to append to file, 4 to read file, q to quit: ")
             if action == "1":
                 self.create_file(self.master_stub)
             elif action == "2":
                 self.delete_file(self.master_stub)
             elif action == "3":
-                self.append(self.master_stub)
+                self.append_file(self.master_stub)
+            elif action == "4":
+                self.read_file(self.master_stub)
             elif action == "q":
                 break
 

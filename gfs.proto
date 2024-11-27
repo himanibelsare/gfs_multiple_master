@@ -6,9 +6,9 @@ package gfs;  // typically lowercase is used for package names
 service MasterToClient {
   rpc GetClientID (EmptyRequest) returns (IDResponse) {}
   rpc CreateFile (FileRequest) returns (Status) {}
-  rpc DeleteFile (FileRequest) returns (Status) {}
+  rpc DeleteFile (FileRequest) returns (stream ChunkLocationsResponse) {}
   rpc ListFiles (EmptyRequest) returns (stream FileResponse) {}  // better return type
-  rpc GetChunkLocations (FileRequest) returns (ChunkLocationsResponse) {}  // specific response
+  rpc GetChunkLocations (FileRequest) returns (stream ChunkLocationsResponse) {}  // specific response
   rpc CommitChunk (ChunkRequest) returns (ChunkLocationsResponse) {}
   rpc GetFileCreateStatus (FileRequest) returns (Status) {}
   rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
@@ -21,7 +21,8 @@ service MasterToClient {
 service ChunkToClient {
   rpc AppendToChunk (ChunkData) returns (Status) {}
   rpc CreateChunk (ChunkData) returns (Status) {}
-  rpc ReadChunk (ChunkRequest) returns (stream ChunkData) {}
+  rpc ReadChunk (ChunkRequest) returns (ChunkData) {}
+  rpc DeleteChunk (ChunkRequest) returns (Status) {}
 }
 
 service ChunkToChunk {
@@ -83,6 +84,7 @@ message ChunkLocationsResponse {
   repeated int32 server = 1;
   int32 status = 2;
   string chunk_id = 3;
+  string message = 4;
 }
 
 message ChunkLocation {
