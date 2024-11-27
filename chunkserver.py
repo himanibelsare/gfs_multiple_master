@@ -7,7 +7,11 @@ import threading
 # Import the generated gRPC code
 import gfs_pb2
 import gfs_pb2_grpc
+from utils import Status
 
+
+def heartbeat():
+    return Status(0, "Alive!")
 class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer, 
                  gfs_pb2_grpc.ChunkToChunkServicer,
                  gfs_pb2_grpc.ChunkToMasterServicer):
@@ -23,26 +27,11 @@ class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer,
         
         # Start heartbeat
         # self.start_heartbeat()
-
-    # def start_heartbeat(self):
-    #     def heartbeat_loop():
-    #         while True:
-    #             try:
-    #                 request = gfs_pb2.HeartbeatRequest(
-    #                     server_id=self.server_id,
-    #                     stored_chunks=list(self.chunks.keys()),
-    #                     available_space=self._get_available_space()
-    #                 )
-    #                 self.master_stub.Heartbeat(request)
-    #             except Exception as e:
-    #                 print(f"Heartbeat failed: {e}")
-    #             time.sleep(10)  # heartbeat every 10 seconds
-                
-    #     # Start heartbeat in separate thread
-    #     import threading
-    #     thread = threading.Thread(target=heartbeat_loop, daemon=True)
-    #     thread.start()
-
+    def Heartbeat(self, request, context):
+        return gfs_pb2.Status(
+            code=0,  # 0 typically indicates success
+            message="Heartbeat received successfully"
+        )
     def _get_available_space(self):
         # Get available disk space in chunk directory
         import shutil

@@ -70,6 +70,8 @@ def remove_from_json(key, file_path):
     return [flag, value]
 
 
+
+
 class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
     def __init__(self) -> None:
         self.clientIDs = 0
@@ -101,6 +103,12 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         elif popped[0] == 0:
             return gfs_pb2.Status(code = 0, message = "No files have been created yet.")
         
+
+
+        
+
+
+
     # def LocateChunks(self, request, context):
     #     file_name = request.name
     #     start_idx = request.idx
@@ -120,6 +128,27 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
     #             num_chunks = math.ceil((start_idx+content_length-1-len(chunks[1])*CHUNK_SIZE)/CHUNK_SIZE)
     #         if num_chunks != None:
 
+class ChunkToMaster():
+    def __init__(self, chunk_servers) -> None:
+        self.chunk_channels = [grpc.insecure_channel(chunkserver) for chunkserver in chunk_servers]
+        self.chunk_stubs = [gfs_pb2_grpc.ChunkToMasterStub(self.chunk_channels[i]) for i in range(len(self.chunk_channels))]
+        # for stub in self.chunk_stubs:
+        #     print(stub)
+        #     print()
+        
+        self.heartbeats_done = 0
+
+    def send_heartbeat(self):
+        print("Sending heartbeat")
+
+        for stub in self.chunk_stubs:
+            try:
+                response = stub.Heartbeat(gfs_pb2.EmptyRequest())
+                print(response.message)
+            except Exception as e:
+                print(f"Error sending heartbeat to {stub}: {e}")
+    
+
 
 
 
@@ -129,6 +158,16 @@ def serve(port):
     server.add_insecure_port(f'[::]:{port}')
     server.start()
     print(f"Server running on port {port}")
+    
+
+    chunk = ChunkToMaster([
+        "localhost:50054",
+        "localhost:50055",
+        "localhost:50056", 
+        "localhost:50057",
+        "localhost:50058"
+    ])
+    chunk.send_heartbeat()
     server.wait_for_termination()
 
 if __name__ == "__main__":
@@ -139,5 +178,7 @@ if __name__ == "__main__":
         thread.start()
         threads.append(thread)
 
-    for thread in threads:
+    for thread in threads:  
         thread.join()
+
+       

@@ -14,6 +14,8 @@ service MasterToClient {
   rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
   rpc LocateChunks (WriteChunkRequest) returns (stream ChunkLocation) {}
   rpc AppendRecord (FileRequest) returns (stream ChunkLocationsResponse) {}
+  rpc CreateSnapshot (CreateSnapshotRequest) returns (CreateSnapshotResponse);
+  rpc DeleteSnapshot (DeleteSnapshotRequest) returns (DeleteSnapshotResponse);
 }
 
 service ChunkToClient {
@@ -31,6 +33,7 @@ service ChunkToMaster {
   rpc DeleteChunks (stream ChunkRequest) returns (Status) {}
   rpc ReplicateChunk (ChunkRequest) returns (Status) {}
   rpc Heartbeat (HeartbeatRequest) returns (Status) {}
+  rpc SendChunkData (SendChunkDataRequest) returns (SendChunkDataResponse);
 }
 
 service MasterToChunk {
@@ -106,4 +109,34 @@ message String{
 message Status {
   int32 code = 1;
   string message = 2;
+}
+
+
+
+// Message types for CreateSnapshot
+message CreateSnapshotRequest {
+    string file_path = 1;
+}
+
+message CreateSnapshotResponse {
+    string snapshot_id = 1;
+    string message = 2;
+}
+
+// Message types for DeleteSnapshot
+message DeleteSnapshotRequest {
+    string snapshot_id = 1;
+}
+
+message DeleteSnapshotResponse {
+    string message = 1;
+}
+
+message SendChunkDataRequest {
+    string file_path = 1;
+    bytes data = 2;
+}
+
+message SendChunkDataResponse {
+    bool success = 1;
 }

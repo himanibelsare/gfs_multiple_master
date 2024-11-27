@@ -5,7 +5,7 @@ import warnings
 
 import gfs_pb2 as gfs__pb2
 
-GRPC_GENERATED_VERSION = '1.66.2'
+GRPC_GENERATED_VERSION = '1.67.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -80,6 +80,21 @@ class MasterToClientStub(object):
                 request_serializer=gfs__pb2.WriteChunkRequest.SerializeToString,
                 response_deserializer=gfs__pb2.ChunkLocation.FromString,
                 _registered_method=True)
+        self.AppendRecord = channel.unary_stream(
+                '/gfs.MasterToClient/AppendRecord',
+                request_serializer=gfs__pb2.FileRequest.SerializeToString,
+                response_deserializer=gfs__pb2.ChunkLocationsResponse.FromString,
+                _registered_method=True)
+        self.CreateSnapshot = channel.unary_unary(
+                '/gfs.MasterToClient/CreateSnapshot',
+                request_serializer=gfs__pb2.CreateSnapshotRequest.SerializeToString,
+                response_deserializer=gfs__pb2.CreateSnapshotResponse.FromString,
+                _registered_method=True)
+        self.DeleteSnapshot = channel.unary_unary(
+                '/gfs.MasterToClient/DeleteSnapshot',
+                request_serializer=gfs__pb2.DeleteSnapshotRequest.SerializeToString,
+                response_deserializer=gfs__pb2.DeleteSnapshotResponse.FromString,
+                _registered_method=True)
 
 
 class MasterToClientServicer(object):
@@ -140,6 +155,24 @@ class MasterToClientServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def AppendRecord(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateSnapshot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteSnapshot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MasterToClientServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -187,6 +220,21 @@ def add_MasterToClientServicer_to_server(servicer, server):
                     servicer.LocateChunks,
                     request_deserializer=gfs__pb2.WriteChunkRequest.FromString,
                     response_serializer=gfs__pb2.ChunkLocation.SerializeToString,
+            ),
+            'AppendRecord': grpc.unary_stream_rpc_method_handler(
+                    servicer.AppendRecord,
+                    request_deserializer=gfs__pb2.FileRequest.FromString,
+                    response_serializer=gfs__pb2.ChunkLocationsResponse.SerializeToString,
+            ),
+            'CreateSnapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateSnapshot,
+                    request_deserializer=gfs__pb2.CreateSnapshotRequest.FromString,
+                    response_serializer=gfs__pb2.CreateSnapshotResponse.SerializeToString,
+            ),
+            'DeleteSnapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteSnapshot,
+                    request_deserializer=gfs__pb2.DeleteSnapshotRequest.FromString,
+                    response_serializer=gfs__pb2.DeleteSnapshotResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -433,6 +481,87 @@ class MasterToClient(object):
             '/gfs.MasterToClient/LocateChunks',
             gfs__pb2.WriteChunkRequest.SerializeToString,
             gfs__pb2.ChunkLocation.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AppendRecord(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/gfs.MasterToClient/AppendRecord',
+            gfs__pb2.FileRequest.SerializeToString,
+            gfs__pb2.ChunkLocationsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateSnapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gfs.MasterToClient/CreateSnapshot',
+            gfs__pb2.CreateSnapshotRequest.SerializeToString,
+            gfs__pb2.CreateSnapshotResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteSnapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gfs.MasterToClient/DeleteSnapshot',
+            gfs__pb2.DeleteSnapshotRequest.SerializeToString,
+            gfs__pb2.DeleteSnapshotResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -703,6 +832,11 @@ class ChunkToMasterStub(object):
                 request_serializer=gfs__pb2.HeartbeatRequest.SerializeToString,
                 response_deserializer=gfs__pb2.Status.FromString,
                 _registered_method=True)
+        self.SendChunkData = channel.unary_unary(
+                '/gfs.ChunkToMaster/SendChunkData',
+                request_serializer=gfs__pb2.SendChunkDataRequest.SerializeToString,
+                response_deserializer=gfs__pb2.SendChunkDataResponse.FromString,
+                _registered_method=True)
 
 
 class ChunkToMasterServicer(object):
@@ -732,6 +866,12 @@ class ChunkToMasterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendChunkData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChunkToMasterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -754,6 +894,11 @@ def add_ChunkToMasterServicer_to_server(servicer, server):
                     servicer.Heartbeat,
                     request_deserializer=gfs__pb2.HeartbeatRequest.FromString,
                     response_serializer=gfs__pb2.Status.SerializeToString,
+            ),
+            'SendChunkData': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendChunkData,
+                    request_deserializer=gfs__pb2.SendChunkDataRequest.FromString,
+                    response_serializer=gfs__pb2.SendChunkDataResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -864,6 +1009,33 @@ class ChunkToMaster(object):
             '/gfs.ChunkToMaster/Heartbeat',
             gfs__pb2.HeartbeatRequest.SerializeToString,
             gfs__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendChunkData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gfs.ChunkToMaster/SendChunkData',
+            gfs__pb2.SendChunkDataRequest.SerializeToString,
+            gfs__pb2.SendChunkDataResponse.FromString,
             options,
             channel_credentials,
             insecure,
