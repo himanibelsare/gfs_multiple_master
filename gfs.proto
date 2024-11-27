@@ -9,16 +9,17 @@ service MasterToClient {
   rpc DeleteFile (FileRequest) returns (Status) {}
   rpc ListFiles (EmptyRequest) returns (stream FileResponse) {}  // better return type
   rpc GetChunkLocations (FileRequest) returns (ChunkLocationsResponse) {}  // specific response
-  rpc CommitChunk (ChunkRequest) returns (ChunkLocationsResponse) {}
+  rpc CommitChunk (ChunkRequest) returns (Status) {}
   rpc GetFileCreateStatus (FileRequest) returns (Status) {}
   rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
   rpc LocateChunks (WriteChunkRequest) returns (stream ChunkLocation) {}
-  rpc AppendRecord (AppendRequest) returns (stream ChunkLocationsResponse) {}
+  rpc AppendRecord (FileRequest) returns (stream ChunkLocationsResponse) {}
+  rpc CreateSnapshot (CreateSnapshotRequest) returns (CreateSnapshotResponse);
+  rpc DeleteSnapshot (DeleteSnapshotRequest) returns (DeleteSnapshotResponse);
 }
 
 service ChunkToClient {
-  rpc AppendToChunk (ChunkData) returns (Status) {}
-  rpc CreateChunk (ChunkData) returns (Status) {}
+  rpc CreateChunk (stream ChunkData) returns (Status) {}
   rpc ReadChunk (ChunkRequest) returns (stream ChunkData) {}
 }
 
@@ -32,6 +33,7 @@ service ChunkToMaster {
   rpc DeleteChunks (stream ChunkRequest) returns (Status) {}
   rpc ReplicateChunk (ChunkRequest) returns (Status) {}
   rpc Heartbeat (HeartbeatRequest) returns (Status) {}
+  rpc SendChunkData (SendChunkDataRequest) returns (SendChunkDataResponse);
 }
 
 service MasterToChunk {
@@ -43,11 +45,6 @@ message EmptyRequest {}
 
 message IDResponse {
   int32 client_id = 1;
-}
-
-message AppendRequest {
-  int32 new_chunk = 1;
-  string name = 2;
 }
 
 message WriteChunkRequest {
@@ -73,14 +70,12 @@ message ChunkRequest {
 
 message ChunkData {
   string chunk_id = 1;
-  string data = 2;
+  bytes data = 2;
   int32 offset = 3;
 }
 
 message ChunkLocationsResponse {
-  repeated int32 server = 1;
-  int32 status = 2;
-  string chunk_id = 3;
+  int32 server = 1;
 }
 
 message ChunkLocation {
@@ -114,4 +109,34 @@ message String{
 message Status {
   int32 code = 1;
   string message = 2;
+}
+
+
+
+// Message types for CreateSnapshot
+message CreateSnapshotRequest {
+    string file_path = 1;
+}
+
+message CreateSnapshotResponse {
+    string snapshot_id = 1;
+    string message = 2;
+}
+
+// Message types for DeleteSnapshot
+message DeleteSnapshotRequest {
+    string snapshot_id = 1;
+}
+
+message DeleteSnapshotResponse {
+    string message = 1;
+}
+
+message SendChunkDataRequest {
+    string file_path = 1;
+    bytes data = 2;
+}
+
+message SendChunkDataResponse {
+    bool success = 1;
 }
