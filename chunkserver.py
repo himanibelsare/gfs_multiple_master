@@ -9,13 +9,9 @@ import gfs_pb2
 import gfs_pb2_grpc
 import json
 from json_functions import update_json, read_from_json, remove_from_json
-
-
-CHUNK_SIZE = 16
-
-
 from utils import Status
 
+CHUNK_SIZE = 16
 
 def heartbeat():
     return Status(0, "Alive!")
@@ -32,14 +28,15 @@ class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer,
         # # Connect to master
         # self.master_channel = grpc.insecure_channel(master_address)
         # self.master_stub = gfs_pb2_grpc.ChunkToMasterStub(self.master_channel)
-
+        
+        # Start heartbeat
+        # self.start_heartbeat()
 
     def Heartbeat(self, request, context):
         return gfs_pb2.Status(
             code=0,  # 0 typically indicates success
             message="Heartbeat received successfully"
-        )
-        
+        )        
 
     def _get_available_space(self):
         # Get available disk space in chunk directory

@@ -125,7 +125,6 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         response = gfs_pb2.ChunkLocationsResponse(status=1,chunk_id=self.chunk_ID)
         response.server.extend(servers)
         return response
-    
 class ChunkToMaster():
     def __init__(self, chunk_servers) -> None:
         self.chunk_channels = [grpc.insecure_channel(chunkserver) for chunkserver in chunk_servers]
@@ -147,15 +146,12 @@ class ChunkToMaster():
                 print(f"Error sending heartbeat to {stub}: {e}")
 
 
-
-
 def serve(port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
     gfs_pb2_grpc.add_MasterToClientServicer_to_server(MasterToClient(port), server)
     server.add_insecure_port(f'[::]:{port}')
     server.start()
     print(f"Server running on port {port}")
-        
 
     chunk = ChunkToMaster([
         "localhost:50054",
@@ -168,9 +164,9 @@ def serve(port):
     try:
         while True:
             chunk.send_heartbeat()
-            time.sleep(20)
+            time.sleep(50)
     except KeyboardInterrupt:
-        print("Shutting down...")
+        pass        
     server.wait_for_termination()
 
 if __name__ == "__main__":
