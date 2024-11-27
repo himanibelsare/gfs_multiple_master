@@ -11,41 +11,37 @@ import gfs_pb2_grpc
 class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer, 
                  gfs_pb2_grpc.ChunkToChunkServicer,
                  gfs_pb2_grpc.ChunkToMasterServicer):
-    def __init__(self, server_id, chunk_dir, master_address):
-        self.server_id = server_id
-        self.chunk_dir = chunk_dir
-        self.master_address = master_address
-        
+    def __init__(self, chunk_dir):
         os.makedirs(chunk_dir, exist_ok=True)
         
         # Store chunk metadata
         self.chunks = {}  # chunk_id -> {version, size, etc}
         
-        # Connect to master
-        self.master_channel = grpc.insecure_channel(master_address)
-        self.master_stub = gfs_pb2_grpc.ChunkToMasterStub(self.master_channel)
+        # # Connect to master
+        # self.master_channel = grpc.insecure_channel(master_address)
+        # self.master_stub = gfs_pb2_grpc.ChunkToMasterStub(self.master_channel)
         
         # Start heartbeat
-        self.start_heartbeat()
+        # self.start_heartbeat()
 
-    def start_heartbeat(self):
-        def heartbeat_loop():
-            while True:
-                try:
-                    request = gfs_pb2.HeartbeatRequest(
-                        server_id=self.server_id,
-                        stored_chunks=list(self.chunks.keys()),
-                        available_space=self._get_available_space()
-                    )
-                    self.master_stub.Heartbeat(request)
-                except Exception as e:
-                    print(f"Heartbeat failed: {e}")
-                time.sleep(10)  # heartbeat every 10 seconds
+    # def start_heartbeat(self):
+    #     def heartbeat_loop():
+    #         while True:
+    #             try:
+    #                 request = gfs_pb2.HeartbeatRequest(
+    #                     server_id=self.server_id,
+    #                     stored_chunks=list(self.chunks.keys()),
+    #                     available_space=self._get_available_space()
+    #                 )
+    #                 self.master_stub.Heartbeat(request)
+    #             except Exception as e:
+    #                 print(f"Heartbeat failed: {e}")
+    #             time.sleep(10)  # heartbeat every 10 seconds
                 
-        # Start heartbeat in separate thread
-        import threading
-        thread = threading.Thread(target=heartbeat_loop, daemon=True)
-        thread.start()
+    #     # Start heartbeat in separate thread
+    #     import threading
+    #     thread = threading.Thread(target=heartbeat_loop, daemon=True)
+    #     thread.start()
 
     def _get_available_space(self):
         # Get available disk space in chunk directory
@@ -132,10 +128,11 @@ class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer,
 
 
 def serve(port):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=5))
-    gfs_pb2_grpc.add_ChunkToClient(ChunkServer(), server)
-    gfs_pb2_grpc.add_ChunkToChunk(ChunkServer(), server)
-    gfs_pb2_grpc.add_ChunkToMaster(ChunkServer(), server)
+    chunk_dir = f'chunkservers/chunks{port}'
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=6))
+    gfs_pb2_grpc.add_ChunkToClientServicer_to_server(ChunkServer(chunk_dir), server)
+    gfs_pb2_grpc.add_ChunkToChunkServicer_to_server(ChunkServer(chunk_dir), server)
+    gfs_pb2_grpc.add_ChunkToMasterServicer_to_server(ChunkServer(chunk_dir), server)
     server.add_insecure_port(f'[::]:{port}')
     server.start()
     print(f"Server running on port {port}")

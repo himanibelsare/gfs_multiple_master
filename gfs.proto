@@ -5,13 +5,15 @@ package gfs;  // typically lowercase is used for package names
 // Interface exported by the master server
 service MasterToClient {
   rpc GetClientID (EmptyRequest) returns (IDResponse) {}
-  rpc create_file (FileName) returns (Status) {}
-  rpc delete_file (FileName) returns (Status) {}
+  rpc CreateFile (FileRequest) returns (Status) {}
+  rpc DeleteFile (FileRequest) returns (Status) {}
   rpc ListFiles (EmptyRequest) returns (stream FileResponse) {}  // better return type
   rpc GetChunkLocations (FileRequest) returns (ChunkLocationsResponse) {}  // specific response
   rpc CommitChunk (ChunkRequest) returns (Status) {}
   rpc GetFileCreateStatus (FileRequest) returns (Status) {}
   rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
+  rpc LocateChunks (WriteChunkRequest) returns (stream ChunkLocation) {}
+  rpc AppendRecord (FileRequest) returns (stream ChunkLocationsResponse) {}
 }
 
 service ChunkToClient {
@@ -42,19 +44,25 @@ message IDResponse {
   int32 client_id = 1;
 }
 
+message WriteChunkRequest {
+  int32 length = 1;
+  int32 idx = 2;
+  string name = 3;
+}
+
 message FileRequest {
-  string filename = 1;
+  string name = 1;
 }
 
 message FileResponse {
-  string filename = 1;
+  string name = 1;
   int64 size = 2;
   string created_at = 3;
 }
 
 message ChunkRequest {
   string chunk_id = 1;
-  string filename = 2;  // optional, for context
+  string name = 2;  // optional, for context
 }
 
 message ChunkData {
@@ -63,17 +71,14 @@ message ChunkData {
   int32 offset = 3;
 }
 
-message FileName{
-    string string = 1;
-}
-
 message ChunkLocationsResponse {
-  repeated ChunkLocation chunks = 1;
+  int32 server = 1;
 }
 
 message ChunkLocation {
-  string chunk_id = 1;
-  repeated string chunk_servers = 2;  // server addresses
+  int32 status = 1;
+  string chunk_id = 2;
+  repeated string chunk_servers = 3;  // server addresses
 }
 
 message ChunkDetailsResponse {
