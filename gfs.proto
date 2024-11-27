@@ -14,7 +14,7 @@ service MasterToClient {
   rpc GetChunkDetails (ChunkRequest) returns (ChunkDetailsResponse) {}
   rpc LocateChunks (WriteChunkRequest) returns (stream ChunkLocation) {}
   rpc AppendRecord (AppendRequest) returns (stream ChunkLocationsResponse) {}
-  rpc CreateSnapshot (CreateSnapshotRequest) returns (CreateSnapshotResponse);
+  rpc CreateSnapshot (CreateSnapshotRequest) returns (Status);
   rpc DeleteSnapshot (DeleteSnapshotRequest) returns (DeleteSnapshotResponse);
 }
 

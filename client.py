@@ -36,6 +36,12 @@ class Client:
         else:
             print(response.message)
 
+    def take_snapshot(self, stub):
+        print("Taking snapshot")
+        response = stub.CreateSnapshot(gfs_pb2.EmptyRequest())
+        print(response.message)
+
+
     
     # def write(self, stub):
     #     file_name = input("Enter name of file to write to: ")
@@ -88,7 +94,7 @@ class Client:
                     break  # Exit loop if all content has been written
 
         if content_covered < len(content):
-            print("here")
+            # print("here")
             server = stub.CommitChunk(gfs_pb2.AppendRequest(new_chunk=1,name=file_name))
             chunk_id = server.chunk_id
             chunk_locations = server.server
@@ -105,13 +111,15 @@ class Client:
     def run(self, server):
         print("Running on server", server, sep=" ")
         while True:
-            action = input("Enter 1 to create file, 2 to delete file, 3 to append to file, q to quit: ")
+            action = input("Enter 1 to create file, 2 to delete file, 3 to append to file, 4 to take a snapshot, q to quit: ")
             if action == "1":
                 self.create_file(self.master_stub)
             elif action == "2":
                 self.delete_file(self.master_stub)
             elif action == "3":
                 self.append(self.master_stub)
+            elif action == "4":
+                self.take_snapshot(self.master_stub)
             elif action == "q":
                 break
 

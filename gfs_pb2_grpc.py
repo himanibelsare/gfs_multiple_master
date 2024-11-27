@@ -88,7 +88,7 @@ class MasterToClientStub(object):
         self.CreateSnapshot = channel.unary_unary(
                 '/gfs.MasterToClient/CreateSnapshot',
                 request_serializer=gfs__pb2.CreateSnapshotRequest.SerializeToString,
-                response_deserializer=gfs__pb2.CreateSnapshotResponse.FromString,
+                response_deserializer=gfs__pb2.Status.FromString,
                 _registered_method=True)
         self.DeleteSnapshot = channel.unary_unary(
                 '/gfs.MasterToClient/DeleteSnapshot',
@@ -229,7 +229,7 @@ def add_MasterToClientServicer_to_server(servicer, server):
             'CreateSnapshot': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateSnapshot,
                     request_deserializer=gfs__pb2.CreateSnapshotRequest.FromString,
-                    response_serializer=gfs__pb2.CreateSnapshotResponse.SerializeToString,
+                    response_serializer=gfs__pb2.Status.SerializeToString,
             ),
             'DeleteSnapshot': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteSnapshot,
@@ -534,7 +534,7 @@ class MasterToClient(object):
             target,
             '/gfs.MasterToClient/CreateSnapshot',
             gfs__pb2.CreateSnapshotRequest.SerializeToString,
-            gfs__pb2.CreateSnapshotResponse.FromString,
+            gfs__pb2.Status.FromString,
             options,
             channel_credentials,
             insecure,

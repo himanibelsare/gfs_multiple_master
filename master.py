@@ -9,6 +9,9 @@ import gfs_pb2
 import gfs_pb2_grpc
 import json
 from json_functions import update_json, read_from_json, remove_from_json
+import os
+import datetime
+import shutil
 
 CHUNK_SIZE = 16
 NUM_SERVERS = 5
@@ -22,6 +25,9 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         self.chunk_locations_path = "metadata/chunk_locations.json"
         self.chunk_ID = f'{port}:0'
         self.server_tracker = 0
+        self.snapshot_dir = "snapshot"
+        self.metadata_dir = "metadata"
+        self.chunk_dir = "chunkservers"
 
     def GetClientID(self, request, context):
         self.clientIDs += 1
@@ -124,7 +130,42 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
         servers = self.CreateChunk(file_name)
         response = gfs_pb2.ChunkLocationsResponse(status=1,chunk_id=self.chunk_ID)
         response.server.extend(servers)
-        return response
+
+
+    def CreateSnapshot(self, request, context):
+        print("Creating snapshot")
+        if not os.path.exists(self.snapshot_dir):
+            os.makedirs(self.snapshot_dir)
+    
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        snapshot_path = os.path.join(self.snapshot_dir, timestamp)
+        
+        try:
+            os.makedirs(snapshot_path)
+            
+            metadata_snapshot = os.path.join(snapshot_path, 'metadata')
+            if os.path.exists(self.metadata_dir):
+                shutil.copytree(self.metadata_dir, metadata_snapshot)
+            
+            chunks_snapshot = os.path.join(snapshot_path, 'chunkservers')
+            if os.path.exists(self.chunk_dir):
+                shutil.copytree(self.chunk_dir, chunks_snapshot)
+                
+            print(f"Created snapshot at {snapshot_path}")
+            return gfs_pb2.Status(
+            code=0,  # 0 typically indicates success
+            message="Snapshot taken successfully"
+        )   
+            
+        except Exception as e:
+            print(f"Error creating snapshot: {e}")
+            # Clean up failed snapshot attempt
+            if os.path.exists(snapshot_path):
+                shutil.rmtree(snapshot_path)
+            return gfs_pb2.Status(
+            code=1,  # 0 typically indicates success
+            message="Snapshot failed"
+        )   
 class ChunkToMaster():
     def __init__(self, chunk_servers) -> None:
         self.chunk_channels = [grpc.insecure_channel(chunkserver) for chunkserver in chunk_servers]
