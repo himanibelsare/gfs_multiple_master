@@ -4,18 +4,22 @@ import time
 import os
 from datetime import datetime
 import threading
-# Import the generated gRPC code
+
 import gfs_pb2
 import gfs_pb2_grpc
+import json
+from json_functions import update_json, read_from_json, remove_from_json
+
+CHUNK_SIZE = 16
 
 class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer, 
                  gfs_pb2_grpc.ChunkToChunkServicer,
                  gfs_pb2_grpc.ChunkToMasterServicer):
-    def __init__(self, chunk_dir):
-        os.makedirs(chunk_dir, exist_ok=True)
+    def __init__(self, chunk_file):
         
         # Store chunk metadata
         self.chunks = {}  # chunk_id -> {version, size, etc}
+        self.chunk_file = chunk_file
         
         # # Connect to master
         # self.master_channel = grpc.insecure_channel(master_address)
@@ -47,34 +51,27 @@ class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer,
         # Get available disk space in chunk directory
         import shutil
         return shutil.disk_usage(self.chunk_dir).free
+    
+    def AppendToChunk(self, request, context):
+        chunk_id = request.chunk_id
+        content = request.data
+        curr_data = read_from_json(chunk_id, self.chunk_file)
+        if curr_data[1] != None:
+            if len(curr_data[1]+content) > CHUNK_SIZE:
+                return gfs_pb2.Status(code=0,message="Not enough space.")
+            new_data = {chunk_id : curr_data[1]+content}
+        else:
+            new_data = {chunk_id : content}
+        update_json(new_data, self.chunk_file)
+        return gfs_pb2.Status(code=1)
 
     # ChunkToClient Service methods
-    def CreateChunk(self, request_iterator, context):
-        # Handle streaming chunk creation
-        chunk_id = None
-        chunk_data = bytearray()
-        
-        try:
-            for request in request_iterator:
-                if chunk_id is None:
-                    chunk_id = request.chunk_id
-                chunk_data.extend(request.data)
-            
-            # Write chunk to disk
-            chunk_path = os.path.join(self.chunk_dir, chunk_id)
-            with open(chunk_path, 'wb') as f:
-                f.write(chunk_data)
-            
-            # Update metadata
-            self.chunks[chunk_id] = {
-                'size': len(chunk_data),
-                'created_at': datetime.now(),
-                'version': 1
-            }
-            
-            return gfs_pb2.Status(code=0, message="Chunk created successfully")
-        except Exception as e:
-            return gfs_pb2.Status(code=1, message=str(e))
+    def CreateChunk(self, request, context):
+        chunk_id = request.chunk_id
+        content = request.data
+        new_data = {chunk_id : content}
+        update_json(new_data, self.chunk_file)
+        return gfs_pb2.Status(code=1)
 
     def ReadChunk(self, request, context):
         chunk_id = request.chunk_id
@@ -128,17 +125,19 @@ class ChunkServer(gfs_pb2_grpc.ChunkToClientServicer,
 
 
 def serve(port):
-    chunk_dir = f'chunkservers/chunks{port}'
+    chunk_file = f'{chunk_dir}/{port}.json'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=6))
-    gfs_pb2_grpc.add_ChunkToClientServicer_to_server(ChunkServer(chunk_dir), server)
-    gfs_pb2_grpc.add_ChunkToChunkServicer_to_server(ChunkServer(chunk_dir), server)
-    gfs_pb2_grpc.add_ChunkToMasterServicer_to_server(ChunkServer(chunk_dir), server)
+    gfs_pb2_grpc.add_ChunkToClientServicer_to_server(ChunkServer(chunk_file), server)
+    gfs_pb2_grpc.add_ChunkToChunkServicer_to_server(ChunkServer(chunk_file), server)
+    gfs_pb2_grpc.add_ChunkToMasterServicer_to_server(ChunkServer(chunk_file), server)
     server.add_insecure_port(f'[::]:{port}')
     server.start()
     print(f"Server running on port {port}")
     server.wait_for_termination()
 
 if __name__ == "__main__":
+    chunk_dir = "chunkservers"
+    os.makedirs(chunk_dir, exist_ok=True)
     ports = [50054, 50055, 50056, 50057, 50058]
     threads = []
     for port in ports:

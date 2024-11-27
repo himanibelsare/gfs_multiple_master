@@ -63,7 +63,7 @@ class MasterToClientStub(object):
         self.CommitChunk = channel.unary_unary(
                 '/gfs.MasterToClient/CommitChunk',
                 request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
-                response_deserializer=gfs__pb2.Status.FromString,
+                response_deserializer=gfs__pb2.ChunkLocationsResponse.FromString,
                 _registered_method=True)
         self.GetFileCreateStatus = channel.unary_unary(
                 '/gfs.MasterToClient/GetFileCreateStatus',
@@ -182,7 +182,7 @@ def add_MasterToClientServicer_to_server(servicer, server):
             'CommitChunk': grpc.unary_unary_rpc_method_handler(
                     servicer.CommitChunk,
                     request_deserializer=gfs__pb2.ChunkRequest.FromString,
-                    response_serializer=gfs__pb2.Status.SerializeToString,
+                    response_serializer=gfs__pb2.ChunkLocationsResponse.SerializeToString,
             ),
             'GetFileCreateStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.GetFileCreateStatus,
@@ -367,7 +367,7 @@ class MasterToClient(object):
             target,
             '/gfs.MasterToClient/CommitChunk',
             gfs__pb2.ChunkRequest.SerializeToString,
-            gfs__pb2.Status.FromString,
+            gfs__pb2.ChunkLocationsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -496,7 +496,12 @@ class ChunkToClientStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.CreateChunk = channel.stream_unary(
+        self.AppendToChunk = channel.unary_unary(
+                '/gfs.ChunkToClient/AppendToChunk',
+                request_serializer=gfs__pb2.ChunkData.SerializeToString,
+                response_deserializer=gfs__pb2.Status.FromString,
+                _registered_method=True)
+        self.CreateChunk = channel.unary_unary(
                 '/gfs.ChunkToClient/CreateChunk',
                 request_serializer=gfs__pb2.ChunkData.SerializeToString,
                 response_deserializer=gfs__pb2.Status.FromString,
@@ -511,7 +516,13 @@ class ChunkToClientStub(object):
 class ChunkToClientServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def CreateChunk(self, request_iterator, context):
+    def AppendToChunk(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateChunk(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -526,7 +537,12 @@ class ChunkToClientServicer(object):
 
 def add_ChunkToClientServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'CreateChunk': grpc.stream_unary_rpc_method_handler(
+            'AppendToChunk': grpc.unary_unary_rpc_method_handler(
+                    servicer.AppendToChunk,
+                    request_deserializer=gfs__pb2.ChunkData.FromString,
+                    response_serializer=gfs__pb2.Status.SerializeToString,
+            ),
+            'CreateChunk': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateChunk,
                     request_deserializer=gfs__pb2.ChunkData.FromString,
                     response_serializer=gfs__pb2.Status.SerializeToString,
@@ -548,7 +564,7 @@ class ChunkToClient(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def CreateChunk(request_iterator,
+    def AppendToChunk(request,
             target,
             options=(),
             channel_credentials=None,
@@ -558,8 +574,35 @@ class ChunkToClient(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_unary(
-            request_iterator,
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gfs.ChunkToClient/AppendToChunk',
+            gfs__pb2.ChunkData.SerializeToString,
+            gfs__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateChunk(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
             target,
             '/gfs.ChunkToClient/CreateChunk',
             gfs__pb2.ChunkData.SerializeToString,

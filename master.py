@@ -8,68 +8,12 @@ import grpc
 import gfs_pb2
 import gfs_pb2_grpc
 import json
+from json_functions import update_json, read_from_json, remove_from_json
 
 CHUNK_SIZE = 16
 NUM_SERVERS = 5
 
 data_lock = threading.Lock()
-
-# add to json/modify existing values
-def update_json(data_update, file_path):
-    flag = 1
-    with data_lock:
-        try:
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-
-            keys = list(data_update.keys())
-            if keys[0] in data:
-                flag = 2
-
-            data.update(data_update)
-
-            with open(file_path, 'w') as file:
-                json.dump(data, file, indent=4)
-        except FileNotFoundError:
-            with open(file_path, 'w') as file:
-                json.dump(data_update, file, indent=4)
-    return flag
-
-# returns value corresponding to given key
-def read_from_json(key, file_path):
-    flag = 2
-    record = []
-    with data_lock:
-        try:
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-            if key in data:
-                flag = 1
-                record = data[key]
-        except FileNotFoundError:
-            flag = 0
-    return [flag, record]
-
-# delete from json and return popped value
-def remove_from_json(key, file_path):
-    flag = 1
-    value = None
-    with data_lock:
-        try:
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-
-            if key not in data:
-                flag = 2
-            else:
-                value = data.pop(key)
-            
-            with open(file_path, 'w') as file:
-                json.dump(data, file, indent=4)
-        except FileNotFoundError:
-            flag = 0
-    return [flag, value]
-
 
 class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
     def __init__(self, port) -> None:
@@ -165,8 +109,8 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
             if len(chunks[1]) == 0 and num_chunks == 0:
                 num_chunks = 1
             else:
-                response = gfs_pb2.ChunkLocationsResponse(status=2,chunk_id=chunks[0][-1])
-                servers = read_from_json(chunks[0][-1], self.chunk_locations_path)
+                response = gfs_pb2.ChunkLocationsResponse(status=2,chunk_id=chunks[1][-1])
+                servers = read_from_json(chunks[1][-1], self.chunk_locations_path)
                 response.server.extend(servers[1])
                 yield response
             for i in range(num_chunks):
@@ -175,6 +119,12 @@ class MasterToClient(gfs_pb2_grpc.MasterToClientServicer) :
                 response.server.extend(servers)
                 yield response
 
+    def CommitChunk(self, request, context):
+        file_name = request.name
+        servers = self.CreateChunk(file_name)
+        response = gfs_pb2.ChunkLocationsResponse(status=1,chunk_id=self.chunk_ID)
+        response.server.extend(servers)
+        return response
 
 def serve(port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))

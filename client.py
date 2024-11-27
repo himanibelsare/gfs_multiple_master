@@ -49,29 +49,56 @@ class Client:
     def append(self, stub):
         file_name = input("Enter file name: ")
         content = input("Enter content: ")
+        print(len(content))
         content_covered = 0
         num_chunks = int(len(content)//CHUNK_SIZE)
         servers = stub.AppendRecord(gfs_pb2.AppendRequest(new_chunk=num_chunks,name=file_name))
+        content_covered = 0  # Track how much content has been processed
+
         for server in servers:
-            if server.status == 0:
-                print("File does not exist.")
-                return
-            if server.status == 2:
-                chunk_id = server.chunk_id
-                chunk_locations = server.server
-                till = CHUNK_SIZE/4
-                if len(content) < till:
-                    till = len(content)
-                record = content[:till]
+            if content_covered >= len(content):
+                break  # Exit if all content has been covered
+            
+            chunk_id = server.chunk_id
+            chunk_locations = server.server
+            
+            while True:
+                till = int(CHUNK_SIZE // 4)
+                remaining_content = len(content) - content_covered
                 
+                # Determine how much content to write in this iteration
+                if remaining_content < till:
+                    till = remaining_content
+                
+                record = content[content_covered:content_covered + till]
+                response = self.chunk_stubs[chunk_locations[0]].AppendToChunk(
+                    gfs_pb2.ChunkData(
+                        chunk_id=chunk_id,
+                        data=record
+                    )
+                )
+                
+                if response.code == 0:
+                    break  # Move to the next chunk if AppendToChunk fails
+                
+                # Update content_covered based on successful write
+                content_covered += till
+                
+                if content_covered >= len(content):
+                    break  # Exit loop if all content has been written
 
-        while content_covered < len(content):
-            if content_covered + CHUNK_SIZE/4 > len(content):
-                record = content[content_covered:]
-            else:
-                record = content[content_covered:content_covered+CHUNK_SIZE/4]
-            content_covered += CHUNK_SIZE/4
-
+        if content_covered < len(content):
+            print("here")
+            server = stub.CommitChunk(gfs_pb2.AppendRequest(new_chunk=1,name=file_name))
+            chunk_id = server.chunk_id
+            chunk_locations = server.server
+            record = content[content_covered:]
+            response = self.chunk_stubs[chunk_locations[0]].AppendToChunk(
+                            gfs_pb2.ChunkData(
+                                chunk_id=chunk_id,
+                                data=record
+                            )
+                        )
         return
 
 
