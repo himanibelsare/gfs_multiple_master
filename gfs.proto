@@ -28,12 +28,12 @@ service ChunkToClient {
 service ChunkToChunk {
   rpc CreateChunk (stream ChunkData) returns (Status) {}
   rpc ReadEntireChunk (ChunkRequest) returns (stream ChunkData) {}
+  rpc ReplicateChunk (ChunkRequest) returns (Status) {}
 }
 
 service ChunkToMaster {
   rpc CommitChunk (ChunkRequest) returns (Status) {}
   rpc DeleteChunks (stream ChunkRequest) returns (Status) {}
-  rpc ReplicateChunk (ChunkRequest) returns (Status) {}
   rpc Heartbeat (HeartbeatRequest) returns (Status) {}
 }
 

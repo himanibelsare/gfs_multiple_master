@@ -5,7 +5,7 @@ import warnings
 
 import gfs_pb2 as gfs__pb2
 
-GRPC_GENERATED_VERSION = '1.66.2'
+GRPC_GENERATED_VERSION = '1.67.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -793,6 +793,11 @@ class ChunkToChunkStub(object):
                 request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
                 response_deserializer=gfs__pb2.ChunkData.FromString,
                 _registered_method=True)
+        self.ReplicateChunk = channel.unary_unary(
+                '/gfs.ChunkToChunk/ReplicateChunk',
+                request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
+                response_deserializer=gfs__pb2.Status.FromString,
+                _registered_method=True)
 
 
 class ChunkToChunkServicer(object):
@@ -810,6 +815,12 @@ class ChunkToChunkServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ReplicateChunk(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChunkToChunkServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -822,6 +833,11 @@ def add_ChunkToChunkServicer_to_server(servicer, server):
                     servicer.ReadEntireChunk,
                     request_deserializer=gfs__pb2.ChunkRequest.FromString,
                     response_serializer=gfs__pb2.ChunkData.SerializeToString,
+            ),
+            'ReplicateChunk': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReplicateChunk,
+                    request_deserializer=gfs__pb2.ChunkRequest.FromString,
+                    response_serializer=gfs__pb2.Status.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -888,6 +904,33 @@ class ChunkToChunk(object):
             metadata,
             _registered_method=True)
 
+    @staticmethod
+    def ReplicateChunk(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/gfs.ChunkToChunk/ReplicateChunk',
+            gfs__pb2.ChunkRequest.SerializeToString,
+            gfs__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
 
 class ChunkToMasterStub(object):
     """Missing associated documentation comment in .proto file."""
@@ -905,11 +948,6 @@ class ChunkToMasterStub(object):
                 _registered_method=True)
         self.DeleteChunks = channel.stream_unary(
                 '/gfs.ChunkToMaster/DeleteChunks',
-                request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
-                response_deserializer=gfs__pb2.Status.FromString,
-                _registered_method=True)
-        self.ReplicateChunk = channel.unary_unary(
-                '/gfs.ChunkToMaster/ReplicateChunk',
                 request_serializer=gfs__pb2.ChunkRequest.SerializeToString,
                 response_deserializer=gfs__pb2.Status.FromString,
                 _registered_method=True)
@@ -935,12 +973,6 @@ class ChunkToMasterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ReplicateChunk(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def Heartbeat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -957,11 +989,6 @@ def add_ChunkToMasterServicer_to_server(servicer, server):
             ),
             'DeleteChunks': grpc.stream_unary_rpc_method_handler(
                     servicer.DeleteChunks,
-                    request_deserializer=gfs__pb2.ChunkRequest.FromString,
-                    response_serializer=gfs__pb2.Status.SerializeToString,
-            ),
-            'ReplicateChunk': grpc.unary_unary_rpc_method_handler(
-                    servicer.ReplicateChunk,
                     request_deserializer=gfs__pb2.ChunkRequest.FromString,
                     response_serializer=gfs__pb2.Status.SerializeToString,
             ),
@@ -1023,33 +1050,6 @@ class ChunkToMaster(object):
             request_iterator,
             target,
             '/gfs.ChunkToMaster/DeleteChunks',
-            gfs__pb2.ChunkRequest.SerializeToString,
-            gfs__pb2.Status.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def ReplicateChunk(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/gfs.ChunkToMaster/ReplicateChunk',
             gfs__pb2.ChunkRequest.SerializeToString,
             gfs__pb2.Status.FromString,
             options,
